@@ -1,0 +1,59 @@
+from groq import Groq
+
+client = Groq(
+    api_key="YOUR_API-KEY"
+)
+
+messages = []
+
+print("=" * 50)
+print("🤖 Groq AI Chatbot")
+print("Type 'exit' to quit")
+print("=" * 50)
+
+while True:
+    user_input = input("\nYou: ")
+
+    if user_input.lower() == "exit":
+        print("Bot: Goodbye!")
+        break
+
+    messages.append(
+        {
+            "role": "user",
+            "content": user_input
+        }
+    )
+
+    print("\nBot: ", end="")
+
+    response_text = ""
+
+    try:
+        completion = client.chat.completions.create(
+            model="openai/gpt-oss-120b",
+            messages=messages,
+            temperature=0.7,
+            max_completion_tokens=1024,
+            top_p=1,
+            stream=True
+        )
+
+        for chunk in completion:
+            content = chunk.choices[0].delta.content
+
+            if content:
+                print(content, end="", flush=True)
+                response_text += content
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": response_text
+            }
+        )
+
+    except Exception as e:
+        print(f"\nError: {e}")
+
+    print()

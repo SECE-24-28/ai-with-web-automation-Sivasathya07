@@ -1,0 +1,27 @@
+import requests
+
+# Paste your Stability AI API Key here
+API_KEY = "your api key"
+
+prompt = "a beautiful small white puppy is playing with butterflies in the evergreen forest, the climate is early morning, the sun is rising and the light is soft, the image is in 4k resolution"
+
+response = requests.post(
+    "https://api.stability.ai/v2beta/stable-image/generate/core",
+    headers={
+        "Authorization": f"Bearer {API_KEY}",
+        "Accept": "image/*"
+    },
+    files={
+        "prompt": (None, prompt),
+        "output_format": (None, "png")
+    }
+)
+
+if response.status_code == 200:
+    with open("generated_image.png", "wb") as f:
+        f.write(response.content)
+    print("✅ Image generated successfully!")
+    print("Saved as generated_image.png")
+else:
+    print("❌ Error:", response.status_code)
+    print(response.text)

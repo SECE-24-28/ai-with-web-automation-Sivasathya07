@@ -1,0 +1,50 @@
+from playwright.sync_api import sync_playwright
+import google.generativeai as genai
+
+# Gemini API Key
+genai.configure(api_key="your api key")
+
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+# Website to scrape
+url = "https://en.wikipedia.org/wiki/Artificial_intelligence"
+
+# Scrape Website
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+
+    page = browser.new_page()
+
+    print("Opening website...")
+    page.goto(url, wait_until="networkidle")
+
+    try:
+        content = page.locator("main").inner_text()
+    except:
+        content = page.locator("body").inner_text()
+
+    browser.close()
+
+print("\nWebsite content collected.")
+print("Sending content to Gemini...\n")
+
+# Limit text size for Gemini
+content = content[:30000]
+
+prompt = f"""
+Read the following webpage content and provide:
+
+1. Short Summary
+2. Key Points
+3. Important Facts
+
+Content:
+{content}
+"""
+
+response = model.generate_content(prompt)
+
+print("=" * 60)
+print("SUMMARY")
+print("=" * 60)
+print(response.text)

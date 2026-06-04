@@ -1,0 +1,216 @@
+
+# =====================================================
+# AI QUESTION PAPER GENERATOR USING RAG + CHROMADB + GROQ
+# =====================================================
+
+import os
+import fitz
+import chromadb
+from sentence_transformers import SentenceTransformer
+from groq import Groq
+
+# =====================================================
+# CONFIGURATION
+# =====================================================
+
+PDF_PATH = r"C:\Users\SIVASATHYA S\Downloads\U23AD483 AI SYLLABUS.pdf"
+
+GROQ_API_KEY = "YOUR_API_KEY"
+
+# =====================================================
+# READ PDF
+# =====================================================
+
+print("\nReading PDF...")
+
+pdf = fitz.open(PDF_PATH)
+
+text = ""
+
+for page in pdf:
+    text += page.get_text()
+
+pdf.close()
+
+print("PDF Loaded Successfully")
+
+# =====================================================
+# CHUNKING
+# =====================================================
+
+print("Creating Chunks...")
+
+chunk_size = 500
+
+chunks = [
+    text[i:i + chunk_size]
+    for i in range(0, len(text), chunk_size)
+]
+
+print(f"Total Chunks: {len(chunks)}")
+
+# =====================================================
+# EMBEDDING MODEL
+# =====================================================
+
+print("Loading Embedding Model...")
+
+embedding_model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+embeddings = embedding_model.encode(chunks).tolist()
+
+# =====================================================
+# CHROMADB
+# =====================================================
+
+print("Storing Data in ChromaDB...")
+
+client_db = chromadb.Client()
+
+collection = client_db.get_or_create_collection(
+    name="syllabus_collection"
+)
+
+for i, chunk in enumerate(chunks):
+    collection.add(
+        ids=[str(i)],
+        documents=[chunk],
+        embeddings=[embeddings[i]]
+    )
+
+print("Vector Database Ready")
+
+# =====================================================
+# RETRIEVAL
+# =====================================================
+
+query = """
+Generate university examination question paper
+from the syllabus.
+"""
+
+query_embedding = embedding_model.encode(
+    query
+).tolist()
+
+results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=min(10, len(chunks))
+)
+
+context = "\n".join(results["documents"][0])
+
+# =====================================================
+# GROQ CLIENT
+# =====================================================
+
+groq_client = Groq(
+    api_key=GROQ_API_KEY
+)
+
+# =====================================================
+# PROMPT
+# =====================================================
+
+prompt = f"""
+You are an expert university question paper setter.
+
+Analyze the syllabus and generate a complete
+question paper in the format below.
+
+--------------------------------------------------
+
+Part A – (9 X 2 = 18 Marks)
+
+1 Highlight the applications of the topic. 2 CO1 K2
+2 List important concepts. 2 CO1 K2
+3 Explain with example. 2 CO1 K3
+4 Apply concept in real-world scenario. 2 CO1 K3
+5 Analyze system behavior. 2 CO1 K3
+6 Compare related concepts. 2 CO1 K2
+7 Discuss advanced techniques. 2 CO2 K3
+8 Justify with suitable example. 2 CO2 K3
+9 Evaluate limitations and improvements. 2 CO2 K3
+
+--------------------------------------------------
+
+Part B – (3 X 14 = 42 Marks)
+
+10 a) Long descriptive question
+14 CO1 K3
+
+(Or)
+
+10 b) Alternative long question
+14 CO1 K3
+
+11 a) Long descriptive question
+14 CO1 K3
+
+(Or)
+
+11 b) Alternative long question
+14 CO1 K3
+
+12 a) Long descriptive question
+14 CO2 K3
+
+(Or)
+
+12 b) Alternative long question
+14 CO2 K3
+
+--------------------------------------------------
+
+Rules:
+
+1. Use syllabus topics only.
+2. Generate meaningful university-level questions.
+3. Cover all units.
+4. Assign CO values appropriately.
+5. Assign Bloom's Taxonomy levels (K1-K6).
+6. Output only the question paper.
+
+SYLLABUS:
+
+{context}
+"""
+
+# =====================================================
+# GENERATE QUESTION PAPER
+# =====================================================
+
+print("\nGenerating Question Paper...\n")
+
+response = groq_client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=[
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ],
+    temperature=0.7,
+    max_tokens=2500
+)
+
+question_paper = response.choices[0].message.content
+
+# =====================================================
+# OUTPUT
+# =====================================================
+
+print("=" * 80)
+print("QUESTION PAPER")
+print("=" * 80)
+print(question_paper)
+print("=" * 80)
+
+with open("generated_question_paper.txt", "w", encoding="utf-8") as f:
+    f.write(question_paper)
+
+print("\nQuestion paper saved as:")
+print("generated_question_paper.txt")
+

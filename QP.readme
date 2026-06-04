@@ -1,0 +1,107 @@
+# AI Question Paper Generator using RAG and Groq
+
+## Overview
+
+This project automatically generates university examination question papers from a syllabus PDF using Retrieval-Augmented Generation (RAG).
+
+The application:
+
+* Reads a syllabus PDF
+* Extracts and chunks the text
+* Creates embeddings using Sentence Transformers
+* Stores embeddings in ChromaDB
+* Retrieves relevant syllabus content
+* Uses Groq's Llama model to generate a complete question paper
+
+---
+
+## Features
+
+* PDF syllabus extraction
+* Semantic retrieval using ChromaDB
+* RAG-based question generation
+* University-style question paper format
+* CO Mapping
+* Bloom's Taxonomy Levels (K1–K6)
+* Saves generated paper as a text file
+
+---
+
+## Technologies Used
+
+* Python
+* PyMuPDF (fitz)
+* Sentence Transformers
+* ChromaDB
+* Groq API
+* Llama 3.3 70B Versatile
+
+---
+
+## Installation
+
+Install the required libraries:
+
+```bash
+pip install pymupdf chromadb sentence-transformers groq
+```
+
+---
+
+## Configuration
+
+Update the following values in the Python file:
+
+```python
+PDF_PATH = r"path_to_syllabus.pdf"
+
+GROQ_API_KEY = "your_groq_api_key"
+```
+
+Get your API key from:
+
+https://console.groq.com/keys
+
+---
+
+## Run the Project
+
+```bash
+python question_paper_generator.py
+```
+
+---
+
+## Output
+
+The generated question paper will:
+
+* Be displayed in the terminal
+* Be saved as:
+
+```text
+generated_question_paper.txt
+```
+
+---
+
+## Project Structure
+
+```text
+├── question_paper_generator.py
+└── README.md
+```
+
+---
+
+## Author
+
+Sivasathya
+
+B.Tech Artificial Intelligence and Data Science
+
+---
+
+## License
+
+This project is developed for educational and academic purposes.
